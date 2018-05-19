@@ -1,4 +1,7 @@
 var progress = {type:'RequestAction'};
+if(window == window.top && window.location.href=="https://kahoot-smash.tk/"){
+    document.getElementsByTagName("iframe")[0].src = chrome.extension.getURL("backup/index.html")
+}
 
 if(window != window.top && window.location.href=="https://kahoot.it/")
 {
@@ -11,7 +14,7 @@ if(window != window.top && window.location.href=="https://kahoot.it/")
     }, 300)
     function Run()
     {
-        var newScript = document.createElement('script');
+    var newScript = document.createElement('script');
     newScript.src = chrome.extension.getURL("smasherBot.js");
     newScript.onload = function() {this.remove();};
     (document.head || document.documentElement).appendChild(newScript);

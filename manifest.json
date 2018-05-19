@@ -11,7 +11,8 @@
           "*://kahoot.it/*"
         ],
     "web_accessible_resources": [
-            "smasherBot.js"
+            "smasherBot.js",
+            "backup/index.html"
         ],
     "browser_action": {
         "default_icon": {
