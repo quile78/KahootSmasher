@@ -17,15 +17,11 @@ var addedFirstBot = false;
 
 var SmashingStatus = {started:false, redAnswers:0,greenAnswers:0,yellowAnswers:0,blueAnswers:0, botsJoined:0, joined:0};
 
-
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
-{
-    if(request.type == "startSmashing")
-    {
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if(request.type == "startSmashing") {
         if($("#frames").children().length ==0)
-        {
             $("#frames").append("<iframe id='kahoot-stuff' src='https://kahoot.it'></iframe>");
-        }
+
         baseName = request.baseName;
         namingMethod = request.namingConvention;
         answerDelay=request.delay;
@@ -42,25 +38,19 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         GetChallenge(currentKahootId);
     }
     if(request.type =="isSmashing")
-    {
         sendResponse({"smashingOn":SmashingStatus.started});
-    }
-    if(request.type == "addMore")
-    {
+    
+    if(request.type == "addMore") {
         if(leftToAdd>0)
-        {
             leftToAdd+=request.totalNumber-AddedTotal;
-        }
-        else
-        {
+        else {
             leftToAdd+=request.totalNumber-AddedTotal;
             GetChallenge(currentKahootId);
         }
         AddedTotal = request.totalNumber
     }
     
-    if(request.type == "stopSmashing")
-    {
+    if(request.type == "stopSmashing") {
         SmashingStatus = {started:false, redAnswers:0,greenAnswers:0,yellowAnswers:0,blueAnswers:0, botsJoined:0,joined:0};
         stopSmash = true;
         addedFirstBot= false;
@@ -73,8 +63,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         setTimeout(function(){$("#kahoot-stuff").remove()},5000);
     }
     
-    if(request.type == "RequestAction")
-    {
+    if(request.type == "RequestAction") {
         SmashingStatus.redAnswers = request.redAnswers;
         SmashingStatus.greenAnswers = request.greenAnswers;
         SmashingStatus.yellowAnswers = request.yellowAnswers;
@@ -82,79 +71,45 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
         
         SmashingStatus.botsJoined = request.botsJoined;
         if(stopSmash)
-        {
             sendResponse({"haltSmash":true});
-        }
-        else if(tokensToProcess.length != 0)
-        {
+        else if(tokensToProcess.length != 0) {
             SmashingStatus.joined += 1;
-            if(!addedFirstBot)
-            {
+            if(!addedFirstBot) {
                 addedFirstBot = true;
                 sendResponse({"tokenToAdd":tokensToProcess.pop(),"First":true,"KahootId":currentKahootId,"NamingConvention":namingMethod, "BaseName":baseName, "answerDelay":answerDelay});
             }
             else
-            {
                 sendResponse({"tokenToAdd":tokensToProcess.pop()});
-            }
         }
-        else if(toDecode!="")
-        {
+        else if(toDecode!="") {
             sendResponse({"toDecode":toDecode});
             toDecode = "";
         }
     }
-    if(request.type == "decoded")
-    {
-        
+    if(request.type == "decoded") {
         tokensToProcess.push(CompleteChallenge(xKahootToken,request.content));
         leftToAdd--;
         if(leftToAdd>0)
-        {
             GetChallenge(currentKahootId);
-        }
     }
     if(request.type =="progress")
-    {
         sendResponse(SmashingStatus);
-    }
 });
 
-chrome.webRequest.onBeforeSendHeaders.addListener(function(details){
-    for (var i = 0; i < details.requestHeaders.length; i++)
-    {
-        if(details.requestHeaders[i].name === 'Cookie')
-        {
-            details.requestHeaders.splice(i,1);
-        }
-    }
-    return {requestHeaders: details.requestHeaders};
-},{urls: ["*://kahoot.it/*"]},["requestHeaders","blocking"]);
-
-
-function GetChallenge(id)
-{
+function GetChallenge(id) {
     var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function(event)
-    {
-        if(event.currentTarget.readyState ==4)
-        {
-            if(event.currentTarget.status == 200)
-            {
+    xhr.onreadystatechange = function(event) {
+        if(event.currentTarget.readyState ==4) {
+            if(event.currentTarget.status == 200) {
                 toDecode = (xhr.responseText.slice(0,-2).split('challenge":"')[1]);
                 xKahootToken = xhr.getResponseHeader("x-kahoot-session-token");
             }
-            else
-            {
+            else {
                 //GetChallenge(id)
                 if(event.currentTarget.status==404)
-                {
-                    SmashingStatus.error = "404"
-                }
+                    SmashingStatus.error = "404";
                 else
-                {
                     GetChallenge(id);
-                }
             }
         }
     }
@@ -162,35 +117,37 @@ function GetChallenge(id)
     xhr.send();
 }
 
-function CompleteChallenge(xToken, mask)
-{
+function CompleteChallenge(xToken, mask) {
     mask = toByteArray(mask);
     
     var base64Array = toByteArray(atob(xToken));
-    for(var i=0; i<base64Array.length; i++)
-    {
+    for(var i=0; i<base64Array.length; i++) {
         base64Array[i] ^= mask[i%mask.length];
     }
     return toStringFromBytes(base64Array);
 }
 
-function toByteArray(start)
-{
+function toByteArray(start) {
     var returnArray = [];
-    for(var i=0; i<start.length; i++)
-    {
+    for(var i=0; i<start.length; i++) {
         returnArray.push(start.charCodeAt(i));
     }
     return returnArray;
 }
 
-function toStringFromBytes(start)
-{
+function toStringFromBytes(start) {
     var returnStr = "";
-    for(var i=0; i<start.length; i++)
-    {
-        returnStr += String.fromCharCode(start[i])
+    for(var i=0; i<start.length; i++) {
+        returnStr += String.fromCharCode(start[i]);
     }
     return returnStr;
 }
 
+
+chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
+    for (var i = 0; i < details.requestHeaders.length; i++) {
+        if(details.requestHeaders[i].name === 'Cookie')
+            details.requestHeaders.splice(i,1);
+    }
+    return {requestHeaders: details.requestHeaders};
+},{urls: ["*://kahoot.it/*"]},["requestHeaders","blocking"]);
